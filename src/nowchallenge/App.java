@@ -4,22 +4,75 @@ import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Stack;
 import java.util.Scanner;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.io.*;
 
 public class App {
 	private HashMap<String, Customer> customers;
 	private PriorityQueue<Driver> drivers;
 	private Queue<Ride> rides;
+	private Queue<Ride> orderPending;
+	private Stack<Action> actions;
 
 	App() {
 		customers = new HashMap<>();
 		drivers = new PriorityQueue<>((a, b) -> Double.compare(b.getRating(), a.getRating()));
 		rides = new LinkedList<>();
+		orderPending = new LinkedList<>();
+		actions = new Stack<>();
+	}
+	
+	public void loadData() {
+		customers.put("C1", new Customer("C1","Hoa", new Location(3,3,"Q1")));
+		customers.put("C2", new Customer("C2","Minh", new Location(6,2,"Q3")));
+		
+		drivers.add(new Driver("1", "An", 4.8, new Location(2.1, 2)));
+	    drivers.add(new Driver("2", "Bình", 4.9, new Location(4, 1)));
+	    drivers.add(new Driver("3", "Cường", 4.5, new Location(1, 3)));
+	    drivers.add(new Driver("4", "Dũng", 4.7, new Location(5, 4)));
+	    
+	    rides.add(new Ride("1", "C1", "2", 5.2, 40000, "Đã xác nhận"));
+	    rides.add(new Ride("2", "C2", "3", 3.5, 25000, "Đã xác nhận"));
+	    
+		System.out.println("✅ Đã khởi tạo danh sách ban đầu cho MinRide");
+	}
+	
+	// Undo
+	public void undo() {
+		if (actions.size() == 0) {
+			System.out.println("\n❎ Không có hành động XÓA nào được thực hiện gần đây");
+			return;
+		}
+		Action latestAction = actions.pop();
+		switch(latestAction.getType()) {
+			case "DELETE_CUST":
+				drivers.add(latestAction.getDriver());
+				System.out.println("\n✅ Hoàn tác thao tác xóa tài xế thành công");
+				break;
+			
+			case "DELETE_DRV":
+				drivers.add(latestAction.getDriver());
+				System.out.println("\n✅ Hoàn tác thao tác xóa tài xế thành công");
+				break;
+			
+			default:	
+				System.out.println("\n❎ Thao tác này không được hỗ trợ để hoàn tác");
+				break;
+		}
 	}
 
 	// Driver
+	public void printAllDrivers() {
+		System.out.println("\n✅ Danh sách tài xế: ");
+		int index = 1;
+		for(Driver d: drivers) {
+			System.out.print(index++ + ". ");
+			d.printInfo();
+		}
+	}
+	
 	public void showTopKDriver(int k) {
 		if (drivers.isEmpty()) {
 			System.out.println("\nChưa có tài xế nào!");
@@ -29,8 +82,8 @@ public class App {
 		PriorityQueue<Driver> temp = new PriorityQueue<>(drivers);
 
 		System.out.println("\nTop " + k + " tài xế có rating cao nhất:");
-		int count = 0;
-		while(!temp.isEmpty() && count < k) {
+		int count = 1;
+		while(!temp.isEmpty() && count <= k) {
 			System.out.print(count++ + ". ");
 			Driver top = temp.poll();
 			top.printInfo();
@@ -88,13 +141,6 @@ public class App {
 				newRating = Double.parseDouble(ratingInput);
 			}
 
-			System.out.print("Nhập tên quận cho địa chỉ mới (Tên cũ " + driverFound.getLocate().getDistrict() + "): ");
-			String districtInput = scan.nextLine();
-			String newDistrict = driverFound.getLocate().getDistrict();
-			if (!districtInput.trim().isEmpty()) {
-				newDistrict = districtInput;
-			}
-
 			System.out.print("Nhập địa chỉ X mới (X cũ " + driverFound.getLocate().getX() + "): ");
 			String xInput = scan.nextLine();
 			double newX = driverFound.getLocate().getX();
@@ -109,7 +155,7 @@ public class App {
 				newY = Integer.parseInt(yInput);
 			}
 
-			Location newLocation = new Location(newX, newY, newDistrict);
+			Location newLocation = new Location(newX, newY);
 
 			drivers.remove(driverFound);
 			driverFound.setRating(newRating);
@@ -167,12 +213,22 @@ public class App {
 	}
 
 	public void removeDriverById(String id) {
-		boolean removed = drivers.removeIf(d -> d.getId().equals(id));
-
-	    if (removed)
+		Driver removedDriver = null;
+		for (Driver d : drivers) {
+	        if (d.getId().equals(id)) {
+	            removedDriver = d;
+	            break;
+	        }
+	    }
+		
+	    if (removedDriver != null) {
+	    	drivers.remove(removedDriver);
 	        System.out.println("✅ Đã xóa tài xế có ID " + id);
-	    else
-	        System.out.println("❎ Không tồn tại tài xế có ID " + id);
+			actions.add(new Action("DELETE_DRV", removedDriver));
+	    } else {
+	    	System.out.println("❎ Không tồn tại tài xế có ID " + id);
+	    	return;
+	    }
 	}
 
 	public Driver findDriverById(String id) {
@@ -260,6 +316,15 @@ public class App {
 	}
 
 	// Customer
+	public void printAllCustomers() {
+		System.out.println("\n✅ Danh sách khách hàng: ");
+		int index = 1;
+		for(Customer c: customers.values()) {
+			System.out.print(index++ + ". ");
+			c.printInfo();
+		}
+	}
+	
 	public void showTopKCustomer(int k, boolean isTop) {
 		ArrayList<Customer> listCustomer = new ArrayList<>(customers.values());
 		if (listCustomer.isEmpty()) {
@@ -334,7 +399,8 @@ public class App {
 			System.out.println("\n❎ ID " + id + " không tồn tại!");
 			return;
 		}
-
+		
+		actions.add(new Action("DELETE_CUST", customers.get(id)));
 		customers.remove(id);
 		System.out.println("\n✅ Xóa khách hàng " + id + " thành công!");
 	}
@@ -403,7 +469,7 @@ public class App {
 					start = end;
 					end = Math.min(end + 10, size);
 				} else if (choice.equals("0")) {
-					System.out.println("\n🚪 Thoát hiển thị danh sách.");
+					System.out.println("\n👋 Thoát hiển thị danh sách.");
 					break;
 				} else {
 					System.out.println("⚠️ Lựa chọn không hợp lệ. Vui lòng nhập lại!");
@@ -435,22 +501,100 @@ public class App {
 
 		int index = 1;
 		for (Ride ride : listRide) {
-			System.out.print(index + ". ");
+			System.out.print(index++ + ". ");
+			ride.printInfo();
+		}
+	}
+	
+	public void showConfirmedRides() {
+		Queue<Ride> tempRides = new LinkedList<>(rides);
+		ArrayList<Ride> listRide = new ArrayList<>();
+
+		while (!tempRides.isEmpty()) {
+			Ride ride = tempRides.peek();
+			if (ride.getStatus().equals("Đã xác nhận")) {
+				listRide.add(ride);
+			}
+			tempRides.poll();
+		}
+
+		if (listRide.isEmpty()) {
+			System.out.println("\n❎ Không có chuyến đi nào đã được xác nhận.");
+			return;
+		}
+
+		System.out.println("\n✅ Danh sách chuyến đi đã được xác nhận: ");
+
+		int index = 1;
+		for (Ride ride : listRide) {
+			System.out.print(index++ + ". ");
+			ride.printInfo();
+		}
+	}
+	
+	public void showPendingRides() {
+		Queue<Ride> tempRides = new LinkedList<>(rides);
+		ArrayList<Ride> listRide = new ArrayList<>();
+
+		while (!tempRides.isEmpty()) {
+			Ride ride = tempRides.peek();
+			if (ride.getStatus().equals("Chưa xác nhận")) {
+				listRide.add(ride);
+			}
+			tempRides.poll();
+		}
+
+		if (listRide.isEmpty()) {
+			System.out.println("\n❎ Không có chuyến đi nào đã được xác nhận.");
+			return;
+		}
+
+		System.out.println("\n✅ Danh sách chuyến đi đã được xác nhận: ");
+
+		int index = 1;
+		for (Ride ride : listRide) {
+			System.out.print(index++ + ". ");
+			ride.printInfo();
+		}
+	}
+	
+	public void showCanceledRides() {
+		Queue<Ride> tempRides = new LinkedList<>(rides);
+		ArrayList<Ride> listRide = new ArrayList<>();
+
+		while (!tempRides.isEmpty()) {
+			Ride ride = tempRides.peek();
+			if (ride.getStatus().equals("Đã hủy")) {
+				listRide.add(ride);
+			}
+			tempRides.poll();
+		}
+
+		if (listRide.isEmpty()) {
+			System.out.println("\n❎ Không có chuyến đi nào đã được xác nhận.");
+			return;
+		}
+
+		System.out.println("\n✅ Danh sách chuyến đi đã được xác nhận: ");
+
+		int index = 1;
+		for (Ride ride : listRide) {
+			System.out.print(index++ + ". ");
 			ride.printInfo();
 		}
 	}
 
-	public void findAvailableDriver(String customerId, double R) {
+	public ArrayList<Driver> findAvailableDriver(String customerId, double R) {
 		Customer customer = this.findCustomerById(customerId);
 		ArrayList<Driver> listDriver = new ArrayList<>();
 
 		if (customer == null) {
-			return;
+			System.out.println("\n❎ Không tìm thấy khách hàng trên hệ thống!");
+			return listDriver;
 		}
 
 		for (Driver drv : drivers) {
-			double d = Math.sqrt(Math.pow(drv.getLocate().getX() - customer.getLocate().getX(), 2)
-					+ Math.pow(drv.getLocate().getY() - customer.getLocate().getY(), 2));
+			double d = drv.getLocate().distanceTo(customer.getLocate());
 
 			if (d <= R) {
 				listDriver.add(drv);
@@ -458,8 +602,8 @@ public class App {
 		}
 
 		if (listDriver.isEmpty()) {
-			System.out.println("Không tìm thấy tài xế phù hợp trong phạm vi " + R + "km");
-			return;
+			System.out.println("\n❎ Không tìm thấy tài xế phù hợp trong phạm vi " + R + "km");
+			return listDriver;
 		}
 
 		listDriver.sort((d1, d2) -> {
@@ -473,13 +617,7 @@ public class App {
 			return Double.compare(d2.getRating(), d1.getRating());
 		});
 
-		System.out.println("Danh sách tài xế phù hợp nhất: ");
-
-		int index = 1;
-		for (Driver drv : listDriver) {
-			System.out.print(index + ". ");
-			drv.printInfo();
-		}
+		return listDriver;
 	}
 
 	public void orderGrab(Scanner scan, String customerId, String driverId, double distance) {
@@ -490,124 +628,129 @@ public class App {
 			return;
 		}
 
-		double distFromDriverToCustomer = Math.sqrt(Math.pow(drv.getLocate().getX() - customer.getLocate().getX(), 2)
-				+ Math.pow(drv.getLocate().getY() - customer.getLocate().getY(), 2));
+		double distFromDriverToCustomer = drv.getLocate().distanceTo(customer.getLocate());
 
 		double finalDistance = distance + distFromDriverToCustomer;
 
 		double fare = finalDistance * 12000;
 
-		System.out.println("\nTổng quảng đường đi: " + finalDistance);
-		System.out.println("Tổng tiền: " + fare);
-
-		while (true) {
-			System.out.println("\n1. Xác nhận chuyến đi");
-			System.out.println("2. Hủy chuyến đi");
-			System.out.print("Nhập lựa chọn: ");
-
-			int choice = Integer.parseInt(scan.nextLine().trim().toLowerCase());
-
-			if (choice == 1) {
-				Ride latestRide = rides.peek();
-				String newId = "";
-				if (latestRide == null)
-					newId = "1";
-				else {
-					String latestId = latestRide.getId();
-					newId = Integer.toString(Integer.parseInt(latestId) + 1);
-				}
-				rides.add(new Ride(newId, customerId, driverId, finalDistance, fare));
-
-				System.out.println("\n✅ Đã xác nhận chuyến đi!");
-			} else if (choice == 2) {
-				System.out.println("\n✅ Hủy chuyến đi thành công!");
-				break;
-			} else {
-				System.out.println("\n❎ Lựa chọn không hợp lệ. Vui lòng nhập lại!");
-			}
-		}
+		System.out.println("\nTổng quảng đường đi: " + String.format("%.2f", finalDistance));
+		System.out.println("Tổng tiền: " + String.format("%.2f", fare) + "VNĐ");
+		
+		String newId = Integer.toString(Math.max(rides.size(), orderPending.size())+1);
+		orderPending.add(new Ride(newId, customerId, driverId, finalDistance, fare));
+		
+		System.out.println("\nĐã thêm chuyến đi " + newId + " vào hàng đợi!");
 	}
-
-	public void autoMatching(Scanner scan, String customerId, Location dist) {
-		Customer customer = this.findCustomerById(customerId);
-		Location locate = customer.getLocate();
-		double R = 5;
-
-		ArrayList<Driver> availableDriver = new ArrayList<>();
-		boolean isChange = false;
-
-		while (availableDriver.isEmpty() || !isChange) {
-			for (Driver drv : drivers) {
-				double d = Math.sqrt(Math.pow(drv.getLocate().getX() - customer.getLocate().getX(), 2)
-						+ Math.pow(drv.getLocate().getY() - customer.getLocate().getY(), 2));
-				if (d <= R) {
-					availableDriver.add(drv);
-					isChange = true;
-				}
-			}
-			if (!isChange && R < 20) {
-				System.out.println("\nKhông tìm thấy tài xế trong phạm vi " + R + "km...");
-				R += 5;
-				System.out.println("Mở rộng tìm kiếm thành " + R + "km.");
-			}
-		}
-
-		if (availableDriver.isEmpty()) {
-			System.out.println("\n❎ Không có tài xế nào khả dụng...");
+	
+	public void showAllPending() {
+		if (orderPending.isEmpty()) {
+			System.out.println("\n❎ Không có chuyến đi nào đang chờ!");
 			return;
 		}
-
-		availableDriver.sort((d1, d2) -> {
-			double dist1 = d1.getLocate().distanceTo(customer.getLocate());
-			double dist2 = d2.getLocate().distanceTo(customer.getLocate());
-
-			int cmp = Double.compare(dist1, dist2);
-			if (cmp != 0)
-				return cmp;
-
-			return Double.compare(d2.getRating(), d1.getRating());
-		});
-
-		Driver drv = availableDriver.get(0);
-
-		double distFromDriverToCustomer = Math.sqrt(Math.pow(drv.getLocate().getX() - customer.getLocate().getX(), 2)
-				+ Math.pow(drv.getLocate().getY() - customer.getLocate().getY(), 2));
-
-		double distance = Math.sqrt(Math.pow(dist.getX() - customer.getLocate().getX(), 2)
-				+ Math.pow(dist.getY() - customer.getLocate().getY(), 2));
-
-		double finalDistance = distance + distFromDriverToCustomer * 2;
-
-		double fare = finalDistance * 12000;
-
-		System.out.println("\nTổng quảng đường đi: " + finalDistance);
-		System.out.println("Tổng tiền: " + fare);
-
-		while (true) {
-			System.out.println("\n1. Xác nhận chuyến đi");
-			System.out.println("2. Hủy chuyến đi");
-			System.out.print("Nhập lựa chọn: ");
-
-			int choice = Integer.parseInt(scan.nextLine().trim().toLowerCase());
-
-			if (choice == 1) {
-				Ride latestRide = rides.peek();
-				String newId = "";
-				if (latestRide == null)
-					newId = "1";
-				else {
-					String latestId = latestRide.getId();
-					newId = Integer.toString(Integer.parseInt(latestId) + 1);
-				}
-				rides.add(new Ride(newId, customerId, drv.getId(), finalDistance, fare));
-
-				System.out.println("\n✅ Đã xác nhận chuyến đi!");
-			} else if (choice == 2) {
-				System.out.println("\n✅ Hủy chuyến đi thành công!");
-				break;
-			} else {
-				System.out.println("\n❎ Lựa chọn không hợp lệ. Vui lòng nhập lại!");
-			}
+		System.out.println("Danh sách các chuyến đang chờ: ");
+		for(Ride p: orderPending) {
+			p.printInfo();
 		}
 	}
+	
+	public void cancelRide(String rideId) {
+		if (orderPending.isEmpty()) {
+			System.out.println("\n❎ Không có chuyến đi nào đang chờ!");
+			return;
+		}
+		
+		Queue<Ride> tmp = new LinkedList<>();
+	    boolean found = false;
+	    
+		while (!orderPending.isEmpty()) {
+			Ride r = orderPending.poll();
+
+			if (r.getId().equals(rideId)) {
+				r.setStatus("Đã hủy");
+				rides.add(r);
+
+				System.out.println("✅ Đã hủy chuyến đi có ID: " + rideId);
+				found = true;
+				break;
+			} else {
+				tmp.add(r);
+			}
+		}
+		
+		while (!orderPending.isEmpty()) {
+	        tmp.add(orderPending.poll());
+	    }
+		orderPending = tmp;
+
+	    if (!found) {
+	        System.out.println("❎ Không tìm thấy chuyến đi đang chờ có ID: " + rideId);
+	    }
+	}
+	
+	public void confirmAllRides() {
+		if (orderPending.isEmpty()) {
+			System.out.println("\n❎ Không có chuyến đi nào đang chờ!");
+			return;
+		}
+		
+		System.out.println("\nBắt đầu xác nhận các chuyến đi...");
+		
+		while(!orderPending.isEmpty()) {
+			Ride ride = orderPending.poll();
+			ride.setStatus("Đã xác nhận");
+			rides.add(ride);
+			System.out.println("Đã xác nhận chuyến đi " + ride.getId());
+		}
+		
+		System.out.println("\n✅ Đã xác nhận tất các chuyến đi đang chờ");
+	}
+	
+	public void showAllRides() {
+		if (rides.isEmpty()) {
+			System.out.println("\n❎ Lịch sử chuyến đi trống!");
+			return;
+		}
+		
+		System.out.println("\nLịch sử các chuyến đi: ");
+		for(Ride rd: rides) {
+			rd.printInfo();
+		}
+		for(Ride rd: orderPending) {
+			rd.printInfo();
+		}
+	}
+
+	public void autoMatch(Scanner scan, String customerId, Location dest) {
+		Customer customer = this.findCustomerById(customerId);
+		if (customer == null) {
+			System.out.println("\n❎ Không tìm thấy khách hàng");
+			return;
+		}
+		
+		Location customerLocation = customer.getLocate();
+		
+		ArrayList<Driver> driverList = new ArrayList<>();
+		// Ban đầu tìm tài xế ở bán kinh 5km, nếu không có sẽ tăng dần thêm 5km nữa. Nếu quá 50km -> không có tx
+		int distToFindDriver = 5;
+		
+		while(driverList.isEmpty() && distToFindDriver <= 50) {
+			driverList = this.findAvailableDriver(customerId, distToFindDriver);
+			distToFindDriver += 5;
+		}
+		
+		if (driverList.isEmpty()) {
+			System.out.println("\n❎ Không tìm thấy tài xế phù hợp cho khách hàng!");
+			return;
+		}
+		
+		Driver optimalDriver = driverList.get(0);
+		
+		double dist = optimalDriver.getLocate().distanceTo(customerLocation);
+		
+		this.orderGrab(scan, customerId, optimalDriver.getId(), dist);
+		
+		System.out.println("\n✅ Đã ghép cặp tài xế cho khách hàng thành công");
+	}
+	
 }

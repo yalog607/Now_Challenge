@@ -6,7 +6,7 @@ public class Ride {
 	private String driverId;
 	private double distance;
 	private double fare;
-	private boolean isConfirmed;
+	private String status;
 	
 	Ride(String id, String customerId, String driverId, double distance, double fare) {
 		this.id = id;
@@ -14,7 +14,20 @@ public class Ride {
 		this.driverId = driverId;
 		this.distance = distance;
 		this.fare = fare;
-		this.isConfirmed = false;
+		this.status = "Chưa xác nhận";
+	}
+
+	Ride(String id, String customerId, String driverId, double distance, double fare,String status) {
+		this.id = id;
+		this.customerId = customerId;
+		this.driverId = driverId;
+		this.distance = distance;
+		this.fare = fare;
+		this.status = status;
+	}
+
+	public String getStatus() {
+		return status;
 	}
 
 	public String getId() {
@@ -37,15 +50,16 @@ public class Ride {
 		return fare;
 	}
 	
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
 	public void printInfo() {
 		System.out.println("ID: " + this.id
 					+ " | ID khách hàng: " + this.customerId
 					+ " | ID tài xế: " + this.driverId
-					+ " | Khoảng cách: " + this.distance
-					+ " | Tiền: " + this.fare);
-	}
-	
-	public void confirmRide() {
-		this.isConfirmed = true;
+					+ " | Khoảng cách: " + String.format("%.2f", this.distance)
+					+ " | Tiền: " + String.format("%.2f", this.fare) + "VNĐ"
+					+ " | Trạng thái: " + this.status);
 	}
 }
