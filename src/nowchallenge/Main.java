@@ -130,7 +130,7 @@ public class Main {
 						System.out.print("\nKhông tìm thấy tài xế có tên hoặc id " + inputForFind);
 						return;
 					}
-					System.out.print("\nDanh sách những tài xế có tên " + inputForFind + ": ");
+					System.out.println("\nDanh sách những tài xế có tên " + inputForFind + ": ");
 					int index = 1;
 					for(Driver drv: drvListFound) {
 						System.out.print(index++ + ". ");
@@ -143,8 +143,8 @@ public class Main {
 				break;
 
 			case 6:
-				app.sortDriversByRatingDescending();
-				System.out.println("n✅ Danh sách tài xế đã được sắp xếp");
+				app.sortDrivers();
+				System.out.println("\n✅ Danh sách tài xế đã được sắp xếp");
 				break;
 
 			case 7:
@@ -326,7 +326,7 @@ public class Main {
 
 	static void printDriverMenu() {
 		System.out.println("\n----- Quản lý tài xế ------");
-		System.out.println("1. Hiển thị top k danh sách theo 2 chiều");
+		System.out.println("1. Hiển thị top k danh sách");
 		System.out.println("2. Thêm mới tài xế");
 		System.out.println("3. Cập nhật thông tin tài xế");
 		System.out.println("4. Xóa tài xế");

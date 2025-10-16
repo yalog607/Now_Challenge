@@ -7,7 +7,6 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.Scanner;
 import java.util.ArrayList;
-import java.io.*;
 
 public class App {
 	private HashMap<String, Customer> customers;
@@ -241,71 +240,17 @@ public class App {
 	    return list;
 	}
 	
-	public ArrayList<Driver> getSortedDrivers() {
+	public void sortDrivers() {
 	    ArrayList<Driver> sorted = new ArrayList<>();
 	    PriorityQueue<Driver> temp = new PriorityQueue<>(drivers);
 	    while (!temp.isEmpty()) {
 	        sorted.add(temp.poll());
 	    }
-	    return sorted;
-	}
-
-	public ArrayList<Driver> sortDriversByRatingDescending() {
-		ArrayList<Driver> listDriver = new ArrayList<>(drivers);
-
-		mergeSortForDriver(listDriver, 0, listDriver.size());
-
-		return listDriver;
-	}
-
-	private static void mergeSortForDriver(ArrayList<Driver> arr, int l, int r) {
-		if (l < r) {
-			int m = l + (r - l) / 2;
-
-			mergeSortForDriver(arr, l, m);
-			mergeSortForDriver(arr, m + 1, r);
-
-			mergeForDriver(arr, l, m, r);
-		}
-	}
-
-	private static void mergeForDriver(ArrayList<Driver> arr, int l, int m, int r) {
-		int n1 = m - l + 1;
-		int n2 = r - m;
-
-		Driver L[] = new Driver[n1];
-		Driver R[] = new Driver[n2];
-
-		for (int i = 0; i < n1; ++i)
-			L[i] = arr.get(l + i);
-		for (int j = 0; j < n2; ++j)
-			R[j] = arr.get(m + 1 + j);
-
-		int i = 0, j = 0;
-
-		int k = l;
-		while (i < n1 && j < n2) {
-			if (L[i].getRating() <= R[j].getRating()) {
-				arr.set(k, L[i]);
-				i++;
-			} else {
-				arr.set(k, R[j]);
-				j++;
-			}
-			k++;
-		}
-
-		while (i < n1) {
-			arr.set(k, L[i]);
-			i++;
-			k++;
-		}
-
-		while (j < n2) {
-			arr.set(k, R[j]);
-			j++;
-			k++;
-		}
+	    
+	    drivers.clear();
+	    for (Driver d: sorted) {
+	    	drivers.add(d);
+	    }
 	}
 
 	// Customer
@@ -538,11 +483,11 @@ public class App {
 		}
 
 		if (listRide.isEmpty()) {
-			System.out.println("\n❎ Không có chuyến đi nào đã được xác nhận.");
+			System.out.println("\n❎ Không có chuyến đi nào đang chờ xác nhận.");
 			return;
 		}
 
-		System.out.println("\n✅ Danh sách chuyến đi đã được xác nhận: ");
+		System.out.println("\n✅ Danh sách chuyến đi đang chờ xác nhận: ");
 
 		int index = 1;
 		for (Ride ride : listRide) {
@@ -564,11 +509,11 @@ public class App {
 		}
 
 		if (listRide.isEmpty()) {
-			System.out.println("\n❎ Không có chuyến đi nào đã được xác nhận.");
+			System.out.println("\n❎ Không có chuyến đi nào đã hủy.");
 			return;
 		}
 
-		System.out.println("\n✅ Danh sách chuyến đi đã được xác nhận: ");
+		System.out.println("\n✅ Danh sách chuyến đi đã hủy: ");
 
 		int index = 1;
 		for (Ride ride : listRide) {

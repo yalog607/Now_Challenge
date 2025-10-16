@@ -20,7 +20,7 @@
 
 ## ⚙️ Các chức năng chính
 1. **Quản lý tài xế (Drivers)**
-   - Hiển thị top K tài xế có rating cao nhất hoặc thấp nhất    
+   - Hiển thị top K tài xế có rating cao nhất   
    - Thêm, cập nhật, xóa tài xế  
    - Tìm kiếm tài xế theo ID hoặc tên  
    - Sắp xếp danh sách tài xế theo rating
@@ -54,6 +54,25 @@
 
 7. **Hoàn tác thao tác**
    - Hỗ trợ **Undo** thao tác **xóa tài xế hoặc khách hàng** vừa thực hiện (dùng Stack)
+
+---
+
+## 💬 Đầu vào ban đầu
+- **Driver:** 
+  - ID, Name, Rating, x, y
+  - 1, An, 4.8, 2.1, 2, 5
+  - 2, Bình, 4.9, 4, 1
+  - 3, Cường, 4.5, 1, 3
+  - 4, Dũng, 4.7, 5, 4
+- **Customer:**  
+  - ID, Name, Location, x, y
+  - 1, Hoa, Q1, 3, 3
+  - 2, Minh, Q3, 6, 2
+- **Ride:**  
+  - RideID, CustomerID, DriverID, Distance(km), Fare(VND)
+  - 1, C1, 2, 5.2, 40000
+  - 2, C2, 3, 3.5, 25000
+
 ---
 
 ## 🧠 Cấu trúc dữ liệu & thuật toán đã sử dụng
