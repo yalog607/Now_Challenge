@@ -178,13 +178,6 @@ public class App {
 				newRating = Double.parseDouble(ratingInput);
 			}
 
-			System.out.print("Nhập tên quận cho địa chỉ mới (Tên cũ " + driverFound.getLocate().getDistrict() + "): ");
-			String districtInput = scan.nextLine();
-			String newDistrict = driverFound.getLocate().getDistrict();
-			if (!districtInput.trim().isEmpty()) {
-				newDistrict = districtInput;
-			}
-
 			System.out.print("Nhập X mới (X cũ " + driverFound.getLocate().getX() + "): ");
 			String xInput = scan.nextLine();
 			double newX = driverFound.getLocate().getX();
@@ -199,7 +192,7 @@ public class App {
 				newY = Integer.parseInt(yInput);
 			}
 
-			Location newLocation = new Location(newX, newY, newDistrict);
+			Location newLocation = new Location(newX, newY);
 
 			drivers.remove(driverFound);
 			driverFound.setRating(newRating);
