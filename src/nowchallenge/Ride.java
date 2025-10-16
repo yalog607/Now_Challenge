@@ -6,6 +6,7 @@ public class Ride {
 	private String driverId;
 	private double distance;
 	private double fare;
+	private boolean isConfirmed;
 	
 	Ride(String id, String customerId, String driverId, double distance, double fare) {
 		this.id = id;
@@ -13,6 +14,7 @@ public class Ride {
 		this.driverId = driverId;
 		this.distance = distance;
 		this.fare = fare;
+		this.isConfirmed = false;
 	}
 
 	public String getId() {
@@ -41,5 +43,9 @@ public class Ride {
 					+ " | ID tài xế: " + this.driverId
 					+ " | Khoảng cách: " + this.distance
 					+ " | Tiền: " + this.fare);
+	}
+	
+	public void confirmRide() {
+		this.isConfirmed = true;
 	}
 }

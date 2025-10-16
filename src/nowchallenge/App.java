@@ -493,7 +493,7 @@ public class App {
 		double distFromDriverToCustomer = Math.sqrt(Math.pow(drv.getLocate().getX() - customer.getLocate().getX(), 2)
 				+ Math.pow(drv.getLocate().getY() - customer.getLocate().getY(), 2));
 
-		double finalDistance = distance + distFromDriverToCustomer * 2;
+		double finalDistance = distance + distFromDriverToCustomer;
 
 		double fare = finalDistance * 12000;
 
